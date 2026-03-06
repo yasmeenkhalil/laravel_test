@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProductController;
+use App\Models\Product;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -14,5 +17,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('product');
 });
+Route::get('/api/products', function() {
+    return Product::orderBy('created_at', 'desc')->get();
+});
+Route::post('/save', [ProductController::class, 'save']);
