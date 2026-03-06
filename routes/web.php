@@ -23,3 +23,5 @@ Route::get('/api/products', function() {
     return Product::orderBy('created_at', 'desc')->get();
 });
 Route::post('/save', [ProductController::class, 'save']);
+
+Route::post('/update/{id}', [ProductController::class, 'update']);

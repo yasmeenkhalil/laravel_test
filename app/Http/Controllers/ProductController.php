@@ -26,4 +26,17 @@ Storage::disk('public')->put( 'products.json', json_encode($allProducts, JSON_PR
         'formatted_date' => $product->created_at->format('Y-m-d H:i:s')
     ]);
    }
+
+   public function update(Request $request, $id)
+{
+    $product = Product::findOrFail($id);
+    $product->update($request->validate([
+        'product_name' => 'required|string',
+        'quantity'     => 'required|integer',
+        'price'        => 'required|numeric',
+    ]));
+
+    Storage::disk('public')->put('products.json', json_encode(Product::all(), JSON_PRETTY_PRINT));
+    return response()->json(['success' => true]);
+}
 }

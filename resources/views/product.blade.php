@@ -1,18 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laravel Test</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
-        body { background-color: #f4f7f6; padding-top: 50px; }
-        .card { border: none; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .table-container { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        th { background-color: #343a40 !important; color: white; }
+        body {
+            background-color: #f4f7f6;
+            padding-top: 50px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        th {
+            background-color: #98adc2 !important;
+            color: white;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="card p-4 mb-5">
@@ -43,10 +63,11 @@
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th>Qty</th>
+                        <th>Quntity</th>
                         <th>Price</th>
                         <th>Submitted At</th>
                         <th>Total</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="productTable"></tbody>
@@ -60,39 +81,63 @@
         </div>
     </div>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             function loadProducts() {
-                $.get('/api/products', function(data) {
+                $.get('/api/products', function (data) {
                     let rows = '';
                     let grandTotal = 0;
                     data.forEach(p => {
                         let total = p.quantity * p.price;
                         grandTotal += total;
-                        rows += `<tr>
-                            <td>${p.product_name}</td>
-                            <td>${p.quantity}</td>
-                            <td>$${parseFloat(p.price).toFixed(2)}</td>
-                            <td>${new Date(p.created_at).toLocaleString()}</td>
-                            <td>$${total.toFixed(2)}</td>
-                        </tr>`;
+                        rows += `
+                <tr id="row-${p.id}">
+                    <td><span class="view-mode">${p.product_name}</span><input type="text" class="form-control edit-mode d-none name-input" value="${p.product_name}"></td>
+                    <td><span class="view-mode">${p.quantity}</span><input type="number" class="form-control edit-mode d-none qty-input" value="${p.quantity}"></td>
+                    <td><span class="view-mode">${p.price}</span><input type="number" step="0.01" class="form-control edit-mode d-none price-input" value="${p.price}"></td>
+                    <td>${new Date(p.created_at).toLocaleString()}</td>
+                    <td>$${total.toFixed(2)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning edit-btn view-mode" onclick="toggleEdit(${p.id})">Edit</button>
+                        <button class="btn btn-sm btn-success save-btn edit-mode d-none" onclick="saveEdit(${p.id})">Save</button>
+                    </td>
+                </tr>`;
                     });
                     $('#productTable').html(rows);
                     $('#grandTotal').text('$' + grandTotal.toFixed(2));
                 });
             }
 
+            // mode
+            window.toggleEdit = function (id) {
+                $(`#row-${id} .view-mode`).addClass('d-none');
+                $(`#row-${id} .edit-mode`).removeClass('d-none');
+            }
+
+            // save data
+            window.saveEdit = function (id) {
+                let data = {
+                    product_name: $(`#row-${id} .name-input`).val(),
+                    quantity: $(`#row-${id} .qty-input`).val(),
+                    price: $(`#row-${id} .price-input`).val(),
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                };
+
+                $.post(`/update/${id}`, data, function () {
+                    loadProducts();
+                });
+            }
             loadProducts();
 
-            $('#form').on('submit', function(e) {
+            $('#form').on('submit', function (e) {
                 e.preventDefault();
                 $.ajax({
                     url: '/save',
                     method: 'POST',
                     data: $(this).serialize(),
                     headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                    success: function() {
+                    success: function () {
                         loadProducts();
                         $('#form')[0].reset();
                     }
@@ -101,4 +146,5 @@
         });
     </script>
 </body>
+
 </html>
